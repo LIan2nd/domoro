@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Transaction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 35px;
+      min-height: 100vh;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      width: 100%;
+      max-width: 500px;
+      padding: 25px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* Center elements horizontally */
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      /* Full width of form */
+      max-width: 400px;
+      /* Maximum width for input, select, and button */
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    a {
+      color: #007BFF;
+      text-decoration: none;
+      font-size: 16px;
+      margin-top: 10px;
+      display: block;
+      text-align: center;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      form {
+        padding: 25px;
+      }
+
+      input,
+      select,
+      button {
+        font-size: 14px;
+      }
+
+      label {
+        font-size: 14px;
+      }
+    }
+  </style>
+
+
+</head>
+
+<body>
+  <h1>Add Transaction</h1>
+  <form action="{{ url_for('add_transaction') }}" method="POST" id="transaction-form">
+    <input type="date" id="date" name="date" required>
+
+    <input type="text" id="description" name="description" placeholder="description" required>
+
+    <input type="text" id="amount" name="amount" placeholder="amount" required>
+
+    <select id="type" name="type" required>
+      <option value="debit">Debit</option>
+      <option value="credit">Credit</option>
+    </select>
+
+    <button type="submit">Add Transaction</button>
+  </form>
+  <a href="{{ url_for('index') }}">Back to Transactions</a>
+
+  <script>
+    const formatRupiah = (value) => {
+      const numberString = value.replace(/[^\d]/g, ""); // Menghapus semua karakter non-angka
+      const formattedValue = new Intl.NumberFormat("id-ID").format(numberString);
+      return formattedValue;
+    };
+
+    // Ambil elemen input amount
+    const amountInput = document.getElementById("amount");
+
+    // Tambahkan event listener untuk input
+    amountInput.addEventListener("input", (e) => {
+      // Ambil nilai mentah dari input
+      const rawValue = amountInput.value;
+      // Format ke Rupiah
+      const formattedValue = formatRupiah(rawValue);
+      // Set kembali nilai yang sudah diformat
+      amountInput.value = formattedValue;
+    });
+
+    // Form submission handler
+    const form = document.getElementById('transaction-form');
+    form.addEventListener('submit', (e) => {
+      // Sebelum form dikirim, kita pastikan untuk mengirimkan nilai mentah (tanpa format)
+      const rawAmount = amountInput.value.replace(/[^\d]/g, ''); // Hapus titik dan karakter non-numerik
+      amountInput.value = rawAmount; // Update nilai yang akan dikirimkan tanpa format
+    });
+  </script>
+</body>
+
+</html>

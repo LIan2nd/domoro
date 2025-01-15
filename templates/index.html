@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domoro Bookkeeping</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 3rem;
+      min-height: 100vh;
+      background-color: #f9f9f9;
+    }
+
+    h1,
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    a {
+      display: inline-block;
+      margin: 15px 0;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    a:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 90%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background-color: #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    table th,
+    table td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    table th {
+      background-color: #f4f4f4;
+      font-weight: bold;
+    }
+
+    table tbody tr:nth-child(odd) {
+      background-color: #f9f9f9;
+    }
+
+    table tbody tr:nth-child(even) {
+      background-color: #fff;
+    }
+
+    table tbody tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .no-transactions {
+      color: #999;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .filter-form {
+      margin-bottom: 20px;
+    }
+
+    .filter-form input {
+      padding: 8px;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+
+    .filter-form select {
+      padding: 8px;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+
+    .filter-form button {
+      padding: 8px 15px;
+      font-size: 14px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .filter-form button:hover {
+      background-color: #0056b3;
+    }
+
+    .filter-form form {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .pagination {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .pagination a {
+      display: inline-block;
+      margin: 0 5px;
+      padding: 8px 12px;
+      background-color: #007BFF;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    .pagination a:hover {
+      background-color: #0056b3;
+    }
+
+    .pagination .active {
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: .5rem;
+        align-items: start;
+      }
+
+      .filter-form form {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      table {
+        width: 100%;
+        font-size: 12px;
+      }
+
+      th,
+      td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Domoro Book</h1>
+  <a href="{{ url_for('add_transaction') }}">Add New Transaction</a>
+
+  <div class="filter-form">
+    <form method="GET" action="{{ url_for('index') }}">
+      <label for="start_date">Start Date:</label>
+      <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+      <label for="end_date">End Date:</label>
+      <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+      <label for="type">Transaction Type:</label>
+      <select id="type" name="type">
+        <option value="">All</option>
+        <option value="debit" {% if type=='debit' %} selected {% endif %}>Debit</option>
+        <option value="credit" {% if type=='credit' %} selected {% endif %}>Credit</option>
+      </select>
+      <label for="per_page">Records Per Page:</label>
+      <select id="per_page" name="per_page">
+        <option value="5" {% if per_page==5 %} selected {% endif %}>5</option>
+        <option value="10" {% if per_page==10 %} selected {% endif %}>10</option>
+        <option value="25" {% if per_page==25 %} selected {% endif %}>25</option>
+        <option value="50" {% if per_page==50 %} selected {% endif %}>50</option>
+      </select>
+      <button type="submit">Filter</button>
+    </form>
+  </div>
+
+  <h2>Transactions</h2>
+  {% if transactions %}
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+      <tr>
+        <td>{{ transaction.date }}</td>
+        <td>{{ transaction.description }}</td>
+        <td>Rp. {{ transaction.amount | rupiah }}</td>
+        <td>{{ transaction.type }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="no-transactions">No transactions available yet. Add a new transaction to get started.</p>
+  {% endif %}
+
+  <div class="pagination">
+    {% for page_num in range(1, total_pages + 1) %}
+    <a href="{{ url_for('index', page=page_num, start_date=start_date, end_date=end_date, type=type, per_page=per_page) }}"
+      class="{% if page_num == current_page %}active{% endif %}">{{ page_num }}</a>
+    {% endfor %}
+  </div>
+
+  <h2>Daily Totals</h2>
+  {% if daily_totals %}
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Net</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for date, totals in daily_totals.items() %}
+      <tr>
+        <td>{{ date }}</td>
+        <td>Rp. {{ totals.debit | rupiah }}</td>
+        <td>Rp. {{ totals.credit | rupiah }}</td>
+        <td>Rp. {{ totals.net | rupiah }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="no-transactions">No daily totals available yet. Add transactions to view the totals.</p>
+  {% endif %}
+
+  <h2>Monthly Totals</h2>
+  {% if monthly_totals %}
+  <table>
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Net</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for month, totals in monthly_totals.items() %}
+      <tr>
+        <td>{{ month }}</td>
+        <td>Rp. {{ totals.debit | rupiah }}</td>
+        <td>Rp. {{ totals.credit | rupiah }}</td>
+        <td>Rp. {{ totals.net | rupiah }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="no-transactions">No monthly totals available yet. Add transactions to view the totals.</p>
+  {% endif %}
+</body>
+
+</html>
